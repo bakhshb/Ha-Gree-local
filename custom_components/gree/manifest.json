@@ -1,6 +1,7 @@
 {
   "domain": "gree",
   "name": "Gree Climate",
+  "version": "1.0.0",
   "codeowners": ["@bakhshb"],
   "config_flow": true,
   "dependencies": ["network"],
