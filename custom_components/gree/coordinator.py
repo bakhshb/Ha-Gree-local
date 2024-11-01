@@ -55,7 +55,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("Device state updated: %s", json_dumps(args))
         self._error_count = 0
         self._last_response_time = utcnow()
-        self.async_set_updated_data(self.device.raw_properties)
+        self.async_set_updated_data(self.device)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the state of the device."""
@@ -100,7 +100,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     f"Device {self.name} is unresponsive for too long and now unavailable"
                 )
 
-        return self.device.raw_properties
+        return self.device
 
     async def push_state_update(self):
         """Send state updates to the physical device."""
