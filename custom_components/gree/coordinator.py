@@ -43,8 +43,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
         self.device = device
-        self.device.add_handler(Response.DATA, self.device_state_updated)
-        self.device.add_handler(Response.RESULT, self.device_state_updated)
+        # self.device.add_handler(Response.DATA, self.device_state_updated)
+        # self.device.add_handler(Response.RESULT, self.device_state_updated)
 
         self._error_count: int = 0
         self._last_response_time: datetime = utcnow()
@@ -100,7 +100,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     f"Device {self.name} is unresponsive for too long and now unavailable"
                 )
 
-        return self.device
+        return self.device.raw_properties
 
     async def push_state_update(self):
         """Send state updates to the physical device."""
