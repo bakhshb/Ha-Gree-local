@@ -43,7 +43,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
         self.device = device
-        # self.device.add_handler(Response.DATA, self.device_state_updated)
+        self.device.add_handler(Response.DATA, self.device_state_updated)
         # self.device.add_handler(Response.RESULT, self.device_state_updated)
 
         self._error_count: int = 0
