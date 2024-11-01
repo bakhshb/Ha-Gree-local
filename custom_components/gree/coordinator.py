@@ -44,7 +44,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.device = device
         self.device.add_handler(Response.DATA, self.device_state_updated)
-        # self.device.add_handler(Response.RESULT, self.device_state_updated)
+        self.device.add_handler(Response.RESULT, self.device_state_updated)
 
         self._error_count: int = 0
         self._last_response_time: datetime = utcnow()
