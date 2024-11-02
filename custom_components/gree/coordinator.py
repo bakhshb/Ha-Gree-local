@@ -32,39 +32,47 @@ _LOGGER = logging.getLogger(__name__)
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages polling for state changes from the device."""
 
-    def __init__(self, hass: HomeAssistant, device: Device) -> None:
+    def __init__(self, hass: HomeAssistant, bcast_addr: list) -> None:
         """Initialize the data update coordinator."""
         DataUpdateCoordinator.__init__(
             self,
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-{device.device_info.name}",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
             always_update=False,
         )
-        self.device = device
-        self.device.add_handler(Response.DATA, self.device_state_updated)
-        self.device.add_handler(Response.RESULT, self.device_state_updated)
-
+        self.bcast_addr = bcast_addr
         self._error_count: int = 0
         self._last_response_time: datetime = utcnow()
         self._last_error_time: datetime | None = None
 
-    def device_state_updated(self, *args: Any) -> None:
-        """Handle device state updates."""
-        _LOGGER.debug("Device state updated: %s", json_dumps(args))
-        self._error_count = 0
-        self._last_response_time = utcnow()
-        self.async_set_updated_data(self.device.raw_properties)
-        return self.device.raw_properties
+    async def _async_setup(self):
+        gree_discovery = Discovery(DISCOVERY_TIMEOUT)
+        bcast_addr = self.bcast_addr
+        devices = await gree_discovery.scan(
+        wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=bcast_addr
+        try:
+            await device.bind()
+        except DeviceNotBoundError:
+            _LOGGER.error("Unable to bind to gree device: %s", device_info)
+        except DeviceTimeoutError:
+            _LOGGER.error("Timeout trying to bind to gree device: %s", device_info)
 
+        _LOGGER.debug(
+            "Adding Gree device %s at %s:%i",
+            device.device_info.name,
+            device.device_info.ip,
+            device.device_info.port,
+        )
+    )
+    
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the state of the device."""
         _LOGGER.debug(
             "Updating device state: %s, error count: %d", self.name, self._error_count
         )
         try:
-            await self.device.update_state()
+            return await self.device.update_state()
         except DeviceNotBoundError as error:
             raise UpdateFailed(
                 f"Device {self.name} is unavailable, device is not bound."
@@ -80,28 +88,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(
                     f"Device {self.name} is unavailable, could not send update request"
                 ) from error
-        else:
-            # raise update failed if time for more than MAX_ERRORS has passed since last update
-            now = utcnow()
-            elapsed_success = now - self._last_response_time
-            if self.update_interval and elapsed_success >= self.update_interval:
-                if not self._last_error_time or (
-                    (now - self.update_interval) >= self._last_error_time
-                ):
-                    self._last_error_time = now
-                    self._error_count += 1
-
-                _LOGGER.warning(
-                    "Device %s is unresponsive for %s seconds",
-                    self.name,
-                    elapsed_success,
-                )
-            if self.last_update_success and self._error_count >= MAX_ERRORS:
-                raise UpdateFailed(
-                    f"Device {self.name} is unresponsive for too long and now unavailable"
-                )
-
-        return self.device.raw_properties
 
     async def push_state_update(self):
         """Send state updates to the physical device."""

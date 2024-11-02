@@ -16,7 +16,7 @@ from .const import (
     DISPATCHERS,
     DOMAIN,
 )
-from .coordinator import DiscoveryService
+from .coordinator import DiscoveryService, DeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,21 +26,24 @@ PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Gree Climate from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    gree_discovery = DiscoveryService(hass)
+    # gree_discovery = DiscoveryService(hass)
+    
+    bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
+    gree_discovery = DeviceDataUpdateCoordinator(hass, bcast_addr)
     hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
-    async def _async_scan_update(_=None):
-        bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
-        await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
+    # async def _async_scan_update(_=None):
+    #     bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
+    #     await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
 
     _LOGGER.debug("Scanning network for Gree devices")
-    await _async_scan_update()
+    # await _async_scan_update()
 
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
-        )
-    )
+    # entry.async_on_unload(
+    #     async_track_time_interval(
+    #         hass, gree_discovery, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+    #     )
+    # )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

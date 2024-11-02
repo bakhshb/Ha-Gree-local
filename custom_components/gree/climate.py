@@ -92,12 +92,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
 
+    coordinators = entry.runtime_data
+
+
     @callback
     def init_device(coordinator):
         """Register the device."""
         async_add_entities([GreeClimateEntity(coordinator)])
 
-    for coordinator in hass.data[DOMAIN][COORDINATORS]:
+    for coordinator in coordinators:
         init_device(coordinator)
 
     entry.async_on_unload(
