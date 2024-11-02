@@ -39,11 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Scanning network for Gree devices")
     # await _async_scan_update()
 
-    # entry.async_on_unload(
-    #     async_track_time_interval(
-    #         hass, gree_discovery, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
-    #     )
-    # )
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass, gree_discovery, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+        )
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
